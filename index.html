@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Мои желания</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -47,6 +48,7 @@
     cursor: pointer;
   }
   button:active { opacity: 0.8; }
+  button:disabled { opacity: 0.5; }
   .wish {
     background: white;
     padding: 16px;
@@ -73,29 +75,136 @@
     width: auto;
   }
   .empty { text-align: center; color: #aaa; padding: 40px 0; font-size: 15px; }
+  .auth-box {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .auth-box p { color: #666; font-size: 14px; margin-bottom: 16px; }
+  .auth-box input { width: 100%; margin-bottom: 8px; }
+  .auth-box button { width: 100%; }
+  .logout {
+    background: none;
+    color: #999;
+    font-size: 13px;
+    padding: 6px 0;
+    text-decoration: underline;
+    width: auto;
+  }
+  .hidden { display: none !important; }
+  .info { font-size: 13px; color: #888; text-align: center; margin-top: 12px; }
 </style>
 </head>
 <body>
-  <h1>✨ Мои желания</h1>
-  <div class="sub">Карта того, к чему я иду</div>
 
-  <div class="form">
-    <input id="text" placeholder="Что я хочу?" />
-    <select id="importance">
-      <option value="1">🔥 Очень важно</option>
-      <option value="2">⭐ Важно</option>
-      <option value="3">💭 Просто хочется</option>
-    </select>
-    <button onclick="add()">Добавить желание</button>
+  <div id="auth-screen">
+    <h1>✨ Мои желания</h1>
+    <div class="sub">Войди, чтобы открыть свою карту</div>
+    <div class="auth-box">
+      <p>Введи свой email — и ты внутри.</p>
+      <input id="email" type="email" placeholder="твой@email.com" />
+      <button id="login-btn" onclick="login()">Войти</button>
+      <div id="auth-msg" class="info"></div>
+    </div>
   </div>
 
-  <div id="list"></div>
+  <div id="app-screen" class="hidden">
+    <h1>✨ Мои желания</h1>
+    <div class="sub">Карта того, к чему я иду</div>
+
+    <div class="form">
+      <input id="text" placeholder="Что я хочу?" />
+      <select id="importance">
+        <option value="1">🔥 Очень важно</option>
+        <option value="2">⭐ Важно</option>
+        <option value="3">💭 Просто хочется</option>
+      </select>
+      <button onclick="add()">Добавить желание</button>
+    </div>
+
+    <div id="list"></div>
+
+    <div style="text-align:center; margin-top:24px;">
+      <button class="logout" onclick="logout()">Выйти</button>
+    </div>
+  </div>
 
 <script>
-  let wishes = JSON.parse(localStorage.getItem('myWishes') || '[]');
+  const SUPABASE_URL = 'https://mdlpxazhddmkjzqvyjpp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_0umpiGCYpJdrK2xru-IrBw_sdzbW3nC';
 
-  function save() {
-    localStorage.setItem('myWishes', JSON.stringify(wishes));
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let wishes = [];
+  let currentUser = null;
+
+  async function checkSession() {
+    const { data } = await db.auth.getSession();
+    if (data.session) {
+      currentUser = data.session.user;
+      showApp();
+    } else {
+      showAuth();
+    }
+  }
+
+  function showAuth() {
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app-screen').classList.add('hidden');
+  }
+
+  function showApp() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    loadWishes();
+  }
+
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const msg = document.getElementById('auth-msg');
+    if (!email) { msg.textContent = 'Введи email'; return; }
+
+    document.getElementById('login-btn').disabled = true;
+    msg.textContent = 'Отправляю письмо...';
+
+    const { error } = await db.auth.signInWithOtp({
+      email: email,
+      options: { emailRedirectTo: window.location.href }
+    });
+
+    document.getElementById('login-btn').disabled = false;
+
+    if (error) {
+      msg.textContent = 'Ошибка: ' + error.message;
+    } else {
+      msg.textContent = 'Проверь почту — там ссылка для входа ✉️';
+    }
+  }
+
+  async function logout() {
+    await db.auth.signOut();
+    currentUser = null;
+    wishes = [];
+    showAuth();
+  }
+
+  async function loadWishes() {
+    const list = document.getElementById('list');
+    list.innerHTML = '<div class="empty">Загружаю...</div>';
+
+    const { data, error } = await db
+      .from('wishes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      list.innerHTML = '<div class="empty">Ошибка: ' + error.message + '</div>';
+      return;
+    }
+    wishes = data || [];
+    render();
   }
 
   function render() {
@@ -116,8 +225,8 @@
           <div class="wish-meta">${stars[w.importance] || ''}</div>
         </div>
         <div class="wish-actions">
-          <button class="icon-btn" onclick="toggle(${w.id})" title="Отметить">${w.done ? '↩' : '✓'}</button>
-          <button class="icon-btn" onclick="remove(${w.id})" title="Удалить">✕</button>
+          <button class="icon-btn" onclick="toggle(${w.id})">${w.done ? '↩' : '✓'}</button>
+          <button class="icon-btn" onclick="remove(${w.id})">✕</button>
         </div>
       </div>
     `).join('');
@@ -127,30 +236,55 @@
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  function add() {
+  async function add() {
     const text = document.getElementById('text').value.trim();
     if (!text) return;
-    wishes.push({
-      id: Date.now(),
-      text: text,
-      importance: +document.getElementById('importance').value,
-      done: false,
-      created: new Date().toISOString()
-    });
+
+    const importance = +document.getElementById('importance').value;
+
+    const { data, error } = await db
+      .from('wishes')
+      .insert([{
+        text: text,
+        importance: importance,
+        user_id: currentUser.id
+      }])
+      .select();
+
+    if (error) {
+      alert('Ошибка: ' + error.message);
+      return;
+    }
+
     document.getElementById('text').value = '';
-    save();
+    wishes.unshift(data[0]);
     render();
   }
 
-  function toggle(id) {
+  async function toggle(id) {
     const w = wishes.find(x => x.id === id);
-    if (w) { w.done = !w.done; save(); render(); }
+    if (!w) return;
+
+    const { error } = await db
+      .from('wishes')
+      .update({ done: !w.done })
+      .eq('id', id);
+
+    if (error) { alert('Ошибка: ' + error.message); return; }
+    w.done = !w.done;
+    render();
   }
 
-  function remove(id) {
+  async function remove(id) {
     if (!confirm('Удалить это желание?')) return;
+
+    const { error } = await db
+      .from('wishes')
+      .delete()
+      .eq('id', id);
+
+    if (error) { alert('Ошибка: ' + error.message); return; }
     wishes = wishes.filter(x => x.id !== id);
-    save();
     render();
   }
 
@@ -158,7 +292,17 @@
     if (e.key === 'Enter') add();
   });
 
-  render();
+  db.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      currentUser = session.user;
+      showApp();
+    } else {
+      currentUser = null;
+      showAuth();
+    }
+  });
+
+  checkSession();
 </script>
 </body>
 </html>
