@@ -35,6 +35,7 @@
     font-size: 15px;
     font-family: inherit;
     background: #fafafa;
+    width: 100%;
   }
   input:focus, select:focus { outline: none; border-color: #a78bca; background: white; }
   button {
@@ -80,10 +81,9 @@
     padding: 24px;
     border-radius: 16px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    text-align: center;
   }
-  .auth-box p { color: #666; font-size: 14px; margin-bottom: 16px; }
-  .auth-box input { width: 100%; margin-bottom: 8px; }
+  .auth-box p { color: #666; font-size: 14px; margin-bottom: 16px; text-align: center; }
+  .auth-box input { margin-bottom: 10px; }
   .auth-box button { width: 100%; }
   .logout {
     background: none;
@@ -94,7 +94,7 @@
     width: auto;
   }
   .hidden { display: none !important; }
-  .info { font-size: 13px; color: #888; text-align: center; margin-top: 12px; }
+  .info { font-size: 13px; color: #c66; text-align: center; margin-top: 12px; min-height: 18px; }
 </style>
 </head>
 <body>
@@ -103,8 +103,9 @@
     <h1>✨ Мои желания</h1>
     <div class="sub">Войди, чтобы открыть свою карту</div>
     <div class="auth-box">
-      <p>Введи свой email — и ты внутри.</p>
-      <input id="email" type="email" placeholder="твой@email.com" />
+      <p>Введи email и пароль</p>
+      <input id="email" type="email" placeholder="email" autocomplete="username" />
+      <input id="password" type="password" placeholder="пароль" autocomplete="current-password" />
       <button id="login-btn" onclick="login()">Войти</button>
       <div id="auth-msg" class="info"></div>
     </div>
@@ -163,24 +164,32 @@
 
   async function login() {
     const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
     const msg = document.getElementById('auth-msg');
-    if (!email) { msg.textContent = 'Введи email'; return; }
+
+    if (!email || !password) {
+      msg.textContent = 'Введи email и пароль';
+      return;
+    }
 
     document.getElementById('login-btn').disabled = true;
-    msg.textContent = 'Отправляю письмо...';
+    msg.textContent = '';
 
-    const { error } = await db.auth.signInWithOtp({
+    const { data, error } = await db.auth.signInWithPassword({
       email: email,
-      options: { emailRedirectTo: window.location.href }
+      password: password
     });
 
     document.getElementById('login-btn').disabled = false;
 
     if (error) {
-      msg.textContent = 'Ошибка: ' + error.message;
-    } else {
-      msg.textContent = 'Проверь почту — там ссылка для входа ✉️';
+      msg.textContent = 'Ошибка: неверный email или пароль';
+      return;
     }
+
+    currentUser = data.user;
+    document.getElementById('password').value = '';
+    showApp();
   }
 
   async function logout() {
@@ -290,6 +299,9 @@
 
   document.getElementById('text').addEventListener('keypress', e => {
     if (e.key === 'Enter') add();
+  });
+  document.getElementById('password').addEventListener('keypress', e => {
+    if (e.key === 'Enter') login();
   });
 
   db.auth.onAuthStateChange((event, session) => {
