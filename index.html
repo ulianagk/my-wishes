@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои желания</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+    background: linear-gradient(160deg, #fdf6f0 0%, #f3e8ff 100%);
+    min-height: 100vh;
+    color: #2d2d2d;
+  }
+  h1 { font-size: 26px; margin-bottom: 4px; }
+  .sub { color: #888; font-size: 14px; margin-bottom: 20px; }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+  }
+  input, select {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #e0d8e8;
+    font-size: 15px;
+    font-family: inherit;
+    background: #fafafa;
+  }
+  input:focus, select:focus { outline: none; border-color: #a78bca; background: white; }
+  button {
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #8b6bb1;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:active { opacity: 0.8; }
+  .wish {
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .wish.done { opacity: 0.45; }
+  .wish.done .wish-text { text-decoration: line-through; }
+  .wish-text { font-size: 16px; margin-bottom: 4px; word-break: break-word; }
+  .wish-meta { font-size: 12px; color: #999; }
+  .wish-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    padding: 4px 6px;
+    cursor: pointer;
+    color: #999;
+    width: auto;
+  }
+  .empty { text-align: center; color: #aaa; padding: 40px 0; font-size: 15px; }
+</style>
+</head>
+<body>
+  <h1>✨ Мои желания</h1>
+  <div class="sub">Карта того, к чему я иду</div>
+
+  <div class="form">
+    <input id="text" placeholder="Что я хочу?" />
+    <select id="importance">
+      <option value="1">🔥 Очень важно</option>
+      <option value="2">⭐ Важно</option>
+      <option value="3">💭 Просто хочется</option>
+    </select>
+    <button onclick="add()">Добавить желание</button>
+  </div>
+
+  <div id="list"></div>
+
+<script>
+  let wishes = JSON.parse(localStorage.getItem('myWishes') || '[]');
+
+  function save() {
+    localStorage.setItem('myWishes', JSON.stringify(wishes));
+  }
+
+  function render() {
+    const list = document.getElementById('list');
+    if (wishes.length === 0) {
+      list.innerHTML = '<div class="empty">Пока пусто. Добавь первое желание ✨</div>';
+      return;
+    }
+    const sorted = [...wishes].sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return a.importance - b.importance;
+    });
+    const stars = { 1: '🔥 Очень важно', 2: '⭐ Важно', 3: '💭 Хочется' };
+    list.innerHTML = sorted.map(w => `
+      <div class="wish ${w.done ? 'done' : ''}">
+        <div>
+          <div class="wish-text">${escapeHtml(w.text)}</div>
+          <div class="wish-meta">${stars[w.importance] || ''}</div>
+        </div>
+        <div class="wish-actions">
+          <button class="icon-btn" onclick="toggle(${w.id})" title="Отметить">${w.done ? '↩' : '✓'}</button>
+          <button class="icon-btn" onclick="remove(${w.id})" title="Удалить">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function add() {
+    const text = document.getElementById('text').value.trim();
+    if (!text) return;
+    wishes.push({
+      id: Date.now(),
+      text: text,
+      importance: +document.getElementById('importance').value,
+      done: false,
+      created: new Date().toISOString()
+    });
+    document.getElementById('text').value = '';
+    save();
+    render();
+  }
+
+  function toggle(id) {
+    const w = wishes.find(x => x.id === id);
+    if (w) { w.done = !w.done; save(); render(); }
+  }
+
+  function remove(id) {
+    if (!confirm('Удалить это желание?')) return;
+    wishes = wishes.filter(x => x.id !== id);
+    save();
+    render();
+  }
+
+  document.getElementById('text').addEventListener('keypress', e => {
+    if (e.key === 'Enter') add();
+  });
+
+  render();
+</script>
+</body>
+</html>
