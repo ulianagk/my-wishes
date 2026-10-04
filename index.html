@@ -2,164 +2,291 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Мои желания</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Мои желания — доска</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  * { box-sizing: border-box; }
-  body {
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
     font-family: -apple-system, system-ui, sans-serif;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px 16px 80px;
-    background: linear-gradient(160deg, #fdf6f0 0%, #f3e8ff 100%);
-    min-height: 100vh;
-    color: #2d2d2d;
+    background: #f5efe7;
+    touch-action: none;
   }
-  h1 { font-size: 26px; margin-bottom: 4px; }
-  .sub { color: #888; font-size: 14px; margin-bottom: 20px; }
-  .form {
+
+  /* ===== Экран входа ===== */
+  #auth-screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    background: linear-gradient(160deg, #fdf6f0 0%, #f3e8ff 100%);
+    z-index: 100;
+  }
+  #auth-screen h1 { font-size: 26px; margin-bottom: 4px; }
+  #auth-screen .sub { color: #888; font-size: 14px; margin-bottom: 24px; }
+  .auth-box {
+    background: white; padding: 24px; border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    width: 100%; max-width: 360px;
+  }
+  .auth-box p { color: #666; font-size: 14px; margin-bottom: 16px; text-align: center; }
+  .auth-box input {
+    width: 100%; padding: 12px; margin-bottom: 10px;
+    border-radius: 10px; border: 1px solid #e0d8e8;
+    font-size: 15px; font-family: inherit; background: #fafafa;
+  }
+  .auth-box input:focus { outline: none; border-color: #a78bca; background: white; }
+  .auth-box button {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: #8b6bb1; color: white; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+  }
+  .auth-box button:disabled { opacity: 0.5; }
+  .auth-msg { font-size: 13px; color: #c66; text-align: center; margin-top: 12px; min-height: 18px; }
+
+  /* ===== Доска ===== */
+  #board {
+    position: fixed; inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 20% 30%, #fef8f0 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, #f0e8ff 0%, transparent 50%),
+      #f5efe7;
+    background-size: 100% 100%;
+    cursor: grab;
+  }
+  #board:active { cursor: grabbing; }
+
+  /* Слой, который двигается (мир) */
+  #world {
+    position: absolute;
+    top: 0; left: 0;
+    width: 5000px; height: 5000px;
+    transform-origin: 0 0;
+    /* стартуем с центром мира в центре экрана */
+  }
+
+  /* Карточка */
+  .wish {
+    position: absolute;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background: white;
-    padding: 16px;
-    border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    margin-bottom: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+    user-select: none;
+    cursor: grab;
   }
-  input, select {
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #e0d8e8;
-    font-size: 15px;
-    font-family: inherit;
-    background: #fafafa;
-    width: 100%;
+  .wish:active { cursor: grabbing; }
+  .wish.dragging { box-shadow: 0 10px 24px rgba(0,0,0,0.25); z-index: 9999; }
+  .wish.done { opacity: 0.45; }
+  .wish.done .wish-text { text-decoration: line-through; }
+
+  .wish-img {
+    width: 100%; flex: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    pointer-events: none;
+    background: rgba(255,255,255,0.4);
   }
-  input:focus, select:focus { outline: none; border-color: #a78bca; background: white; }
-  button {
-    padding: 12px;
+  .wish-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d2d2d;
+    line-height: 1.3;
+    word-break: break-word;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .wish-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .wish-done-badge {
+    position: absolute;
+    top: 6px; left: 6px;
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .wish-handle {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 22px; height: 22px;
+    cursor: nwse-resize;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,0.25);
+    font-size: 14px;
+  }
+
+  /* ===== Верхняя панель ===== */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    z-index: 50;
+  }
+  #topbar .title {
+    font-size: 16px; font-weight: 600; color: #2d2d2d;
+    flex: 1;
+  }
+  #topbar button {
+    padding: 8px 14px;
     border-radius: 10px;
+    border: none;
+    background: #8b6bb1;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #topbar .logout-btn {
+    background: none; color: #999; font-size: 13px;
+    text-decoration: underline; padding: 6px;
+  }
+
+  /* ===== Нижняя панель ===== */
+  #bottombar {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px;
+    z-index: 50;
+  }
+  #bottombar button {
+    padding: 14px 20px;
+    border-radius: 30px;
     border: none;
     background: #8b6bb1;
     color: white;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 4px 14px rgba(139,107,177,0.4);
   }
-  button:active { opacity: 0.8; }
-  button:disabled { opacity: 0.5; }
-  .wish {
-    background: white;
-    padding: 16px;
-    border-radius: 14px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+  /* ===== Модалки ===== */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 200;
   }
-  .wish.done { opacity: 0.45; }
-  .wish.done .wish-text { text-decoration: line-through; }
-  .wish-text { font-size: 16px; margin-bottom: 4px; word-break: break-word; }
-  .wish-meta { font-size: 12px; color: #999; }
-  .wish-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .icon-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    padding: 4px 6px;
-    cursor: pointer;
-    color: #999;
-    width: auto;
+  .modal {
+    background: white; border-radius: 18px;
+    padding: 22px; width: 100%; max-width: 380px;
+    max-height: 85vh; overflow-y: auto;
   }
-  .empty { text-align: center; color: #aaa; padding: 40px 0; font-size: 15px; }
-  .auth-box {
-    background: white;
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  .modal h2 { font-size: 18px; margin: 0 0 16px; }
+  .modal label { font-size: 13px; color: #666; display: block; margin-top: 12px; margin-bottom: 6px; }
+  .modal input, .modal textarea, .modal select {
+    width: 100%; padding: 10px; border-radius: 10px;
+    border: 1px solid #e0d8e8; font-size: 14px; font-family: inherit;
+    background: #fafafa;
   }
-  .auth-box p { color: #666; font-size: 14px; margin-bottom: 16px; text-align: center; }
-  .auth-box input { margin-bottom: 10px; }
-  .auth-box button { width: 100%; }
-  .logout {
-    background: none;
-    color: #999;
-    font-size: 13px;
-    padding: 6px 0;
-    text-decoration: underline;
-    width: auto;
+  .modal input:focus, .modal textarea:focus { outline: none; border-color: #a78bca; background: white; }
+  .modal textarea { resize: vertical; min-height: 60px; }
+  .colors { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .color-swatch {
+    width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; border: 3px solid transparent;
   }
+  .color-swatch.active { border-color: #8b6bb1; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .modal-actions button {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .modal-actions .save { background: #8b6bb1; color: white; }
+  .modal-actions .cancel { background: #eee; color: #555; }
+  .modal-actions .delete { background: #f5d5d5; color: #a33; }
+
   .hidden { display: none !important; }
-  .info { font-size: 13px; color: #c66; text-align: center; margin-top: 12px; min-height: 18px; }
+
+  /* Стартовое уведомление */
+  #hint {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.75); color: white;
+    padding: 10px 16px; border-radius: 20px; font-size: 13px;
+    z-index: 60; transition: opacity 0.5s; pointer-events: none;
+  }
 </style>
 </head>
 <body>
 
+  <!-- ===== ВХОД ===== -->
   <div id="auth-screen">
     <h1>✨ Мои желания</h1>
-    <div class="sub">Войди, чтобы открыть свою карту</div>
+    <div class="sub">Войди, чтобы открыть свою доску</div>
     <div class="auth-box">
       <p>Введи email и пароль</p>
       <input id="email" type="email" placeholder="email" autocomplete="username" />
       <input id="password" type="password" placeholder="пароль" autocomplete="current-password" />
       <button id="login-btn" onclick="login()">Войти</button>
-      <div id="auth-msg" class="info"></div>
+      <div id="auth-msg" class="auth-msg"></div>
     </div>
   </div>
 
-  <div id="app-screen" class="hidden">
-    <h1>✨ Мои желания</h1>
-    <div class="sub">Карта того, к чему я иду</div>
-
-    <div class="form">
-      <input id="text" placeholder="Что я хочу?" />
-      <select id="importance">
-        <option value="1">🔥 Очень важно</option>
-        <option value="2">⭐ Важно</option>
-        <option value="3">💭 Просто хочется</option>
-      </select>
-      <button onclick="add()">Добавить желание</button>
-    </div>
-
-    <div id="list"></div>
-
-    <div style="text-align:center; margin-top:24px;">
-      <button class="logout" onclick="logout()">Выйти</button>
-    </div>
+  <!-- ===== ДОСКА ===== -->
+  <div id="topbar" class="hidden">
+    <div class="title">✨ Мои желания</div>
+    <button onclick="openNewWish()">+ Желание</button>
+    <button class="logout-btn" onclick="logout()">Выйти</button>
   </div>
+
+  <div id="board" class="hidden">
+    <div id="world"></div>
+  </div>
+
+  <div id="bottombar" class="hidden">
+    <button onclick="openNewWish()">＋ Добавить желание</button>
+  </div>
+
+  <div id="hint" class="hidden">Тащи карточки пальцем · Тапни — редактировать</div>
 
 <script>
+  // ======== КОНФИГ ========
   const SUPABASE_URL = 'https://mdlpxazhddmkjzqvyjpp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_0umpiGCYpJdrK2xru-IrBw_sdzbW3nC';
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let wishes = [];
+  // ======== СОСТОЯНИЕ ========
   let currentUser = null;
+  let wishes = [];
+  let editingId = null;      // id карточки, которую редактируем
+  let selectedColor = '#fff3b0';
 
+  // Камера (для зума и перемещения доски)
+  let cam = { x: 0, y: 0, scale: 1 };
+
+  // Центр мира — от него ставим новые карточки
+  const WORLD_SIZE = 5000;
+  const WORLD_CENTER = WORLD_SIZE / 2;
+
+  // Цвета для палитры
+  const COLORS = [
+    '#fff3b0', '#ffd6d6', '#d6e8ff', '#d6ffe0',
+    '#ffe8cc', '#e8d6ff', '#ffe0f0', '#e0e0e0'
+  ];
+
+  // ======== АВТОРИЗАЦИЯ ========
   async function checkSession() {
     const { data } = await db.auth.getSession();
     if (data.session) {
       currentUser = data.session.user;
-      showApp();
-    } else {
-      showAuth();
+      startApp();
     }
-  }
-
-  function showAuth() {
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('app-screen').classList.add('hidden');
-  }
-
-  function showApp() {
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('app-screen').classList.remove('hidden');
-    loadWishes();
   }
 
   async function login() {
@@ -167,154 +294,359 @@
     const password = document.getElementById('password').value;
     const msg = document.getElementById('auth-msg');
 
-    if (!email || !password) {
-      msg.textContent = 'Введи email и пароль';
-      return;
-    }
+    if (!email || !password) { msg.textContent = 'Введи email и пароль'; return; }
 
     document.getElementById('login-btn').disabled = true;
     msg.textContent = '';
 
-    const { data, error } = await db.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
 
     document.getElementById('login-btn').disabled = false;
 
-    if (error) {
-      msg.textContent = 'Ошибка: неверный email или пароль';
-      return;
-    }
+    if (error) { msg.textContent = 'Неверный email или пароль'; return; }
 
     currentUser = data.user;
     document.getElementById('password').value = '';
-    showApp();
+    startApp();
   }
 
   async function logout() {
     await db.auth.signOut();
     currentUser = null;
     wishes = [];
-    showAuth();
+    document.getElementById('topbar').classList.add('hidden');
+    document.getElementById('board').classList.add('hidden');
+    document.getElementById('bottombar').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
   }
 
-  async function loadWishes() {
-    const list = document.getElementById('list');
-    list.innerHTML = '<div class="empty">Загружаю...</div>';
+  // ======== СТАРТ ========
+  function startApp() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('topbar').classList.remove('hidden');
+    document.getElementById('board').classList.remove('hidden');
+    document.getElementById('bottombar').classList.remove('hidden');
 
+    // Начальная позиция камеры — центр мира в центре экрана
+    cam.x = window.innerWidth / 2 - WORLD_CENTER;
+    cam.y = window.innerHeight / 2 - WORLD_CENTER;
+    cam.scale = 1;
+    applyCamera();
+
+    loadWishes();
+
+    // Подсказка
+    const hint = document.getElementById('hint');
+    hint.classList.remove('hidden');
+    setTimeout(() => { hint.style.opacity = '0'; }, 3000);
+    setTimeout(() => { hint.classList.add('hidden'); }, 3500);
+  }
+
+  // ======== ЗАГРУЗКА И ОТОБРАЖЕНИЕ ========
+  async function loadWishes() {
     const { data, error } = await db
       .from('wishes')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     if (error) {
-      list.innerHTML = '<div class="empty">Ошибка: ' + error.message + '</div>';
+      alert('Ошибка загрузки: ' + error.message);
       return;
     }
     wishes = data || [];
-    render();
+    renderAll();
   }
 
-  function render() {
-    const list = document.getElementById('list');
-    if (wishes.length === 0) {
-      list.innerHTML = '<div class="empty">Пока пусто. Добавь первое желание ✨</div>';
-      return;
+  function renderAll() {
+    const world = document.getElementById('world');
+    world.innerHTML = '';
+    wishes.forEach(w => world.appendChild(createCard(w)));
+  }
+
+  function createCard(w) {
+    const el = document.createElement('div');
+    el.className = 'wish' + (w.done ? ' done' : '');
+    el.dataset.id = w.id;
+    el.style.left = w.pos_x + 'px';
+    el.style.top = w.pos_y + 'px';
+    el.style.width = w.width + 'px';
+    el.style.height = w.height + 'px';
+    el.style.background = w.color || '#fff3b0';
+
+    const badge = w.importance === 1 ? '🔥' : w.importance === 2 ? '⭐' : '💭';
+
+    let imgHtml = '';
+    if (w.image_url) {
+      imgHtml = `<img class="wish-img" src="${escapeAttr(w.image_url)}" onerror="this.style.display='none'" />`;
     }
-    const sorted = [...wishes].sort((a, b) => {
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      return a.importance - b.importance;
+
+    el.innerHTML = `
+      <span class="wish-badge">${badge}</span>
+      ${w.done ? '<span class="wish-done-badge">✅</span>' : ''}
+      ${imgHtml}
+      <div class="wish-text">${escapeHtml(w.text)}</div>
+      <div class="wish-handle">◢</div>
+    `;
+
+    // Перетаскивание
+    attachDrag(el, w);
+
+    // Изменение размера
+    const handle = el.querySelector('.wish-handle');
+    attachResize(handle, el, w);
+
+    // Тап — открыть редактор (но не при перетаскивании)
+    el.addEventListener('click', (e) => {
+      if (el.dataset.dragged === '1') {
+        el.dataset.dragged = '0';
+        return;
+      }
+      openEditWish(w.id);
     });
-    const stars = { 1: '🔥 Очень важно', 2: '⭐ Важно', 3: '💭 Хочется' };
-    list.innerHTML = sorted.map(w => `
-      <div class="wish ${w.done ? 'done' : ''}">
-        <div>
-          <div class="wish-text">${escapeHtml(w.text)}</div>
-          <div class="wish-meta">${stars[w.importance] || ''}</div>
-        </div>
-        <div class="wish-actions">
-          <button class="icon-btn" onclick="toggle(${w.id})">${w.done ? '↩' : '✓'}</button>
-          <button class="icon-btn" onclick="remove(${w.id})">✕</button>
+
+    return el;
+  }
+
+  // ======== ПЕРЕТАСКИВАНИЕ ========
+  function attachDrag(el, w) {
+    let startX, startY, origX, origY, dragging = false, moved = false;
+
+    const onDown = (e) => {
+      if (e.target.classList.contains('wish-handle')) return;
+      e.stopPropagation();
+      const p = point(e);
+      startX = p.x; startY = p.y;
+      origX = w.pos_x; origY = w.pos_y;
+      dragging = true; moved = false;
+      el.classList.add('dragging');
+      el.dataset.dragged = '0';
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      const p = point(e);
+      const dx = (p.x - startX) / cam.scale;
+      const dy = (p.y - startY) / cam.scale;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+      w.pos_x = origX + dx;
+      w.pos_y = origY + dy;
+      el.style.left = w.pos_x + 'px';
+      el.style.top = w.pos_y + 'px';
+    };
+
+    const onUp = async () => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+
+      if (moved) {
+        el.dataset.dragged = '1';
+        // Округляем и сохраняем
+        w.pos_x = Math.round(w.pos_x);
+        w.pos_y = Math.round(w.pos_y);
+        await db.from('wishes').update({
+          pos_x: w.pos_x,
+          pos_y: w.pos_y
+        }).eq('id', w.id);
+      }
+    };
+
+    el.addEventListener('pointerdown', onDown);
+  }
+
+  // ======== ИЗМЕНЕНИЕ РАЗМЕРА ========
+  function attachResize(handle, el, w) {
+    if (!handle) return;
+
+    let startX, startY, origW, origH, resizing = false;
+
+    const onDown = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const p = point(e);
+      startX = p.x; startY = p.y;
+      origW = w.width; origH = w.height;
+      resizing = true;
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    };
+
+    const onMove = (e) => {
+      if (!resizing) return;
+      const p = point(e);
+      const dx = (p.x - startX) / cam.scale;
+      const dy = (p.y - startY) / cam.scale;
+      w.width = Math.max(140, Math.round(origW + dx));
+      w.height = Math.max(100, Math.round(origH + dy));
+      el.style.width = w.width + 'px';
+      el.style.height = w.height + 'px';
+    };
+
+    const onUp = async () => {
+      if (!resizing) return;
+      resizing = false;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      await db.from('wishes').update({
+        width: w.width,
+        height: w.height
+      }).eq('id', w.id);
+    };
+
+    handle.addEventListener('pointerdown', onDown);
+  }
+
+  // ======== ПЕРЕМЕЩЕНИЕ ДОСКИ (PAN) ========
+  const board = document.getElementById('board');
+  const world = document.getElementById('world');
+
+  let panning = false, panStartX, panStartY, camStartX, camStartY;
+
+  board.addEventListener('pointerdown', (e) => {
+    // Если кликнули по карточке — не панорамируем
+    if (e.target.closest('.wish')) return;
+    panning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    camStartX = cam.x;
+    camStartY = cam.y;
+    document.addEventListener('pointermove', onPanMove);
+    document.addEventListener('pointerup', onPanUp);
+  });
+
+  function onPanMove(e) {
+    if (!panning) return;
+    cam.x = camStartX + (e.clientX - panStartX);
+    cam.y = camStartY + (e.clientY - panStartY);
+    applyCamera();
+  }
+  function onPanUp() {
+    panning = false;
+    document.removeEventListener('pointermove', onPanMove);
+    document.removeEventListener('pointerup', onPanUp);
+  }
+
+  function applyCamera() {
+    world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
+  }
+
+  // ======== ЗУМ (pinch на телефоне, колесо на компе) ========
+  let pinchStartDist = 0, pinchStartScale = 1;
+
+  board.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinchStartDist = dist(e.touches[0], e.touches[1]);
+      pinchStartScale = cam.scale;
+    }
+  }, { passive: true });
+
+  board.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      const d = dist(e.touches[0], e.touches[1]);
+      const newScale = Math.min(2.5, Math.max(0.3, pinchStartScale * (d / pinchStartDist)));
+      cam.scale = newScale;
+      applyCamera();
+    }
+  }, { passive: true });
+
+  board.addEventListener('touchend', () => { pinchStartDist = 0; });
+
+  board.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = -e.deltaY * 0.001;
+    cam.scale = Math.min(2.5, Math.max(0.3, cam.scale * (1 + delta)));
+    applyCamera();
+  }, { passive: false });
+
+  function dist(a, b) {
+    const dx = a.clientX - b.clientX;
+    const dy = a.clientY - b.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  // ======== МОДАЛКА НОВОГО ЖЕЛАНИЯ ========
+  function openNewWish() {
+    editingId = null;
+    selectedColor = '#fff3b0';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'modal';
+    modal.innerHTML = `
+      <div class="modal">
+        <h2>Новое желание</h2>
+        <label>Что я хочу?</label>
+        <textarea id="m-text" placeholder="Например: съездить в Японию"></textarea>
+        <label>Ссылка на картинку (необязательно)</label>
+        <input id="m-image" placeholder="https://..." />
+        <label>Важность</label>
+        <select id="m-importance">
+          <option value="1">🔥 Очень важно</option>
+          <option value="2" selected>⭐ Важно</option>
+          <option value="3">💭 Просто хочется</option>
+        </select>
+        <label>Цвет</label>
+        <div class="colors" id="m-colors"></div>
+        <div class="modal-actions">
+          <button class="cancel" onclick="closeModal()">Отмена</button>
+          <button class="save" onclick="saveNew()">Добавить</button>
         </div>
       </div>
-    `).join('');
+    `;
+    document.body.appendChild(modal);
+    renderColorPicker();
+    document.getElementById('m-text').focus();
   }
 
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function renderColorPicker() {
+    const wrap = document.getElementById('m-colors');
+    if (!wrap) return;
+    wrap.innerHTML = COLORS.map(c =>
+      `<div class="color-swatch ${c === selectedColor ? 'active' : ''}"
+            style="background:${c}"
+            onclick="pickColor('${c}')"></div>`
+    ).join('');
   }
 
-  async function add() {
-    const text = document.getElementById('text').value.trim();
-    if (!text) return;
-
-    const importance = +document.getElementById('importance').value;
-
-    const { data, error } = await db
-      .from('wishes')
-      .insert([{
-        text: text,
-        importance: importance,
-        user_id: currentUser.id
-      }])
-      .select();
-
-    if (error) {
-      alert('Ошибка: ' + error.message);
-      return;
-    }
-
-    document.getElementById('text').value = '';
-    wishes.unshift(data[0]);
-    render();
+  function pickColor(c) {
+    selectedColor = c;
+    renderColorPicker();
   }
 
-  async function toggle(id) {
+  async function saveNew() {
+    const text = document.getElementById('m-text').value.trim();
+    if (!text) { alert('Напиши желание'); return; }
+
+    const importance = +document.getElementById('m-importance').value;
+    const image_url = document.getElementById('m-image').value.trim() || null;
+
+    // Ставим карточку в центр текущего вида
+    const pos_x = Math.round(-cam.x / cam.scale + window.innerWidth / (2 * cam.scale));
+    const pos_y = Math.round(-cam.y / cam.scale + window.innerHeight / (2 * cam.scale));
+
+    const { data, error } = await db.from('wishes').insert([{
+      text, importance, image_url,
+      color: selectedColor,
+      pos_x, pos_y,
+      width: 240, height: 200,
+      user_id: currentUser.id
+    }]).select();
+
+    if (error) { alert('Ошибка: ' + error.message); return; }
+
+    wishes.push(data[0]);
+    document.getElementById('world').appendChild(createCard(data[0]));
+    closeModal();
+  }
+
+  // ======== МОДАЛКА РЕДАКТИРОВАНИЯ ========
+  function openEditWish(id) {
     const w = wishes.find(x => x.id === id);
     if (!w) return;
 
-    const { error } = await db
-      .from('wishes')
-      .update({ done: !w.done })
-      .eq('id', id);
-
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    w.done = !w.done;
-    render();
-  }
-
-  async function remove(id) {
-    if (!confirm('Удалить это желание?')) return;
-
-    const { error } = await db
-      .from('wishes')
-      .delete()
-      .eq('id', id);
-
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    wishes = wishes.filter(x => x.id !== id);
-    render();
-  }
-
-  document.getElementById('text').addEventListener('keypress', e => {
-    if (e.key === 'Enter') add();
-  });
-  document.getElementById('password').addEventListener('keypress', e => {
-    if (e.key === 'Enter') login();
-  });
-
-  db.auth.onAuthStateChange((event, session) => {
-    if (session) {
-      currentUser = session.user;
-      showApp();
-    } else {
-      currentUser = null;
-      showAuth();
-    }
-  });
-
-  checkSession();
-</script>
-</body>
-</html>
+    editingId = id;
+    selecte
