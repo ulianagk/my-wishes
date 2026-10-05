@@ -17,14 +17,11 @@
     touch-action: none;
   }
 
-  /* ===== Масштаб интерфейса: 
-     на телефоне — 1x, на ПК — крупнее ===== */
+  /* ===== Масштаб интерфейса ===== */
   :root {
     --ui-scale: 1;
     --card-min-w: 140px;
     --card-min-h: 100px;
-    --card-default-w: 240px;
-    --card-default-h: 200px;
     --topbar-padding: 10px 12px;
     --btn-padding: 8px 12px;
     --btn-font: 13px;
@@ -36,38 +33,75 @@
     --modal-h2: 18px;
     --modal-btn-font: 14px;
     --modal-btn-padding: 12px;
+    --zone-label: 13px;
+    --hint-font: 13px;
+    --rem-font: 14px;
+    --rem-icon: 24px;
   }
 
+  /* Планшет / небольшой ноутбук */
   @media (min-width: 768px) {
     :root {
-      --ui-scale: 1.35;
-      --card-min-w: 200px;
-      --card-min-h: 140px;
-      --card-default-w: 320px;
-      --card-default-h: 260px;
-      --topbar-padding: 14px 20px;
-      --btn-padding: 10px 18px;
-      --btn-font: 15px;
-      --title-font: 20px;
-      --modal-max-w: 540px;
-      --modal-padding: 30px;
-      --modal-label: 15px;
-      --modal-input: 16px;
-      --modal-h2: 22px;
-      --modal-btn-font: 16px;
-      --modal-btn-padding: 14px;
+      --ui-scale: 1.4;
+      --card-min-w: 220px;
+      --card-min-h: 160px;
+      --topbar-padding: 16px 24px;
+      --btn-padding: 12px 20px;
+      --btn-font: 18px;
+      --title-font: 24px;
+      --modal-max-w: 580px;
+      --modal-padding: 32px;
+      --modal-label: 17px;
+      --modal-input: 18px;
+      --modal-h2: 26px;
+      --modal-btn-font: 18px;
+      --modal-btn-padding: 16px;
+      --zone-label: 16px;
+      --hint-font: 17px;
+      --rem-font: 19px;
+      --rem-icon: 30px;
     }
   }
 
+  /* Твой монитор 2560×1440, 27" */
   @media (min-width: 1400px) {
     :root {
-      --ui-scale: 1.6;
-      --topbar-padding: 18px 28px;
-      --title-font: 22px;
-      --modal-max-w: 600px;
+      --ui-scale: 1.8;
+      --card-min-w: 280px;
+      --card-min-h: 200px;
+      --topbar-padding: 20px 32px;
+      --btn-padding: 16px 26px;
+      --btn-font: 23px;
+      --title-font: 30px;
+      --modal-max-w: 720px;
+      --modal-padding: 40px;
+      --modal-label: 21px;
+      --modal-input: 23px;
+      --modal-h2: 32px;
+      --modal-btn-font: 23px;
+      --modal-btn-padding: 20px;
+      --zone-label: 20px;
+      --hint-font: 21px;
+      --rem-font: 24px;
+      --rem-icon: 38px;
     }
   }
 
+  /* Огромный монитор */
+  @media (min-width: 2200px) {
+    :root {
+      --ui-scale: 2.1;
+      --btn-font: 26px;
+      --title-font: 34px;
+      --modal-h2: 36px;
+      --modal-input: 26px;
+      --modal-label: 24px;
+      --modal-btn-font: 26px;
+      --zone-label: 23px;
+    }
+  }
+
+  /* ===== Экран входа ===== */
   #auth-screen {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
@@ -76,28 +110,29 @@
     background: linear-gradient(160deg, #1a1a22 0%, #25203a 100%);
     z-index: 100;
   }
-  #auth-screen h1 { font-size: calc(26px * var(--ui-scale)); margin-bottom: 4px; color: #fff; }
-  #auth-screen .sub { color: #888; font-size: calc(14px * var(--ui-scale)); margin-bottom: 24px; }
+  #auth-screen h1 { font-size: calc(28px * var(--ui-scale)); margin-bottom: 6px; color: #fff; }
+  #auth-screen .sub { color: #888; font-size: calc(15px * var(--ui-scale)); margin-bottom: 28px; }
   .auth-box {
-    background: #252530; padding: calc(24px * var(--ui-scale)); border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    width: 100%; max-width: calc(380px * var(--ui-scale));
+    background: #252530; padding: calc(28px * var(--ui-scale)); border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    width: 100%; max-width: calc(420px * var(--ui-scale));
   }
-  .auth-box p { color: #aaa; font-size: calc(14px * var(--ui-scale)); margin-bottom: 16px; text-align: center; }
+  .auth-box p { color: #aaa; font-size: calc(15px * var(--ui-scale)); margin-bottom: 18px; text-align: center; }
   .auth-box input {
-    width: 100%; padding: calc(12px * var(--ui-scale)); margin-bottom: 10px;
-    border-radius: 10px; border: 1px solid #3a3a45;
-    font-size: calc(15px * var(--ui-scale)); font-family: inherit; background: #1a1a22; color: #eee;
+    width: 100%; padding: calc(14px * var(--ui-scale)); margin-bottom: 12px;
+    border-radius: 12px; border: 1px solid #3a3a45;
+    font-size: calc(16px * var(--ui-scale)); font-family: inherit; background: #1a1a22; color: #eee;
   }
   .auth-box input:focus { outline: none; border-color: #a78bca; }
   .auth-box button {
-    width: 100%; padding: calc(12px * var(--ui-scale)); border-radius: 10px; border: none;
-    background: #7a5ba0; color: white; font-size: calc(15px * var(--ui-scale));
+    width: 100%; padding: calc(14px * var(--ui-scale)); border-radius: 12px; border: none;
+    background: #7a5ba0; color: white; font-size: calc(16px * var(--ui-scale));
     font-weight: 600; cursor: pointer;
   }
   .auth-box button:disabled { opacity: 0.5; }
-  .auth-msg { font-size: calc(13px * var(--ui-scale)); color: #e88; text-align: center; margin-top: 12px; min-height: 18px; }
+  .auth-msg { font-size: calc(14px * var(--ui-scale)); color: #e88; text-align: center; margin-top: 14px; min-height: 20px; }
 
+  /* ===== Доска ===== */
   #board {
     position: fixed; inset: 0;
     overflow: hidden;
@@ -111,35 +146,36 @@
   #world {
     position: absolute;
     top: 0; left: 0;
-    width: 8000px; height: 8000px;
+    width: 12000px; height: 12000px;
     transform-origin: 0 0;
   }
 
   .zone {
     position: absolute;
-    border-radius: 24px;
-    border: 2px dashed rgba(255,255,255,0.08);
+    border-radius: 32px;
+    border: 2px dashed rgba(255,255,255,0.1);
     pointer-events: none;
   }
   .zone-label {
     position: absolute;
-    top: -16px; left: 24px;
+    top: -20px; left: 32px;
     background: #252530;
-    padding: 6px 16px;
-    border-radius: 12px;
-    font-size: calc(13px * var(--ui-scale));
+    padding: 8px 22px;
+    border-radius: 14px;
+    font-size: var(--zone-label);
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    color: #aaa;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    color: #bbb;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
   }
 
+  /* ===== Карточка ===== */
   .wish {
     position: absolute;
-    border-radius: 14px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.5);
-    padding: calc(10px * var(--ui-scale));
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    padding: calc(14px * var(--ui-scale));
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -148,7 +184,7 @@
     cursor: grab;
   }
   .wish:active { cursor: grabbing; }
-  .wish.dragging { box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 9999; }
+  .wish.dragging { box-shadow: 0 14px 40px rgba(0,0,0,0.75); z-index: 9999; }
   .wish.done { opacity: 0.45; }
   .wish.done .wish-text { text-decoration: line-through; }
   .wish.dim { opacity: 0.15; }
@@ -156,15 +192,15 @@
   .wish-img {
     width: 100%; flex: 1;
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 6px;
+    border-radius: 10px;
+    margin-bottom: 8px;
     pointer-events: none;
     background: rgba(255,255,255,0.1);
     min-height: 0;
   }
   .wish-text {
-    font-size: calc(14px * var(--ui-scale));
-    font-weight: 500;
+    font-size: calc(16px * var(--ui-scale));
+    font-weight: 600;
     color: #2d2d2d;
     line-height: 1.3;
     word-break: break-word;
@@ -173,60 +209,65 @@
   }
   .wish-badge {
     position: absolute;
-    top: 6px; right: 6px;
-    font-size: calc(16px * var(--ui-scale));
+    top: 8px; right: 8px;
+    font-size: calc(20px * var(--ui-scale));
     pointer-events: none;
   }
   .wish-done-badge {
     position: absolute;
-    top: 6px; left: 6px;
-    font-size: calc(16px * var(--ui-scale));
+    top: 8px; left: 8px;
+    font-size: calc(20px * var(--ui-scale));
     pointer-events: none;
   }
   .wish-deadline {
     position: absolute;
-    bottom: 6px; left: 8px;
-    font-size: calc(10px * var(--ui-scale));
-    font-weight: 600;
-    background: rgba(0,0,0,0.5);
+    bottom: 8px; left: 10px;
+    font-size: calc(12px * var(--ui-scale));
+    font-weight: 700;
+    background: rgba(0,0,0,0.55);
     color: white;
-    padding: 3px 8px;
-    border-radius: 8px;
+    padding: 4px 10px;
+    border-radius: 10px;
     pointer-events: none;
   }
-  .wish-deadline.soon { background: rgba(220,120,0,0.9); }
-  .wish-deadline.overdue { background: rgba(200,50,50,0.9); }
+  .wish-deadline.soon { background: rgba(220,120,0,0.95); }
+  .wish-deadline.overdue { background: rgba(200,50,50,0.95); }
 
-  .wish-progress { margin-top: 4px; pointer-events: none; flex-shrink: 0; }
+  .wish-progress { margin-top: 6px; pointer-events: none; flex-shrink: 0; }
   .progress-bar {
-    height: 7px; background: rgba(0,0,0,0.15);
-    border-radius: 4px; overflow: hidden; margin-bottom: 4px;
+    height: calc(8px * var(--ui-scale));
+    background: rgba(0,0,0,0.15);
+    border-radius: 5px; overflow: hidden; margin-bottom: 5px;
   }
   .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #8b6bb1, #b18bdb);
-    border-radius: 4px;
+    border-radius: 5px;
   }
-  .progress-text { font-size: calc(11px * var(--ui-scale)); font-weight: 600; color: #555; }
+  .progress-text {
+    font-size: calc(12px * var(--ui-scale));
+    font-weight: 700; color: #555;
+  }
 
   .wish-handle {
     position: absolute;
     bottom: 0; right: 0;
-    width: calc(26px * var(--ui-scale));
-    height: calc(26px * var(--ui-scale));
+    width: calc(30px * var(--ui-scale));
+    height: calc(30px * var(--ui-scale));
     cursor: nwse-resize;
     display: flex; align-items: center; justify-content: center;
     color: rgba(0,0,0,0.3);
-    font-size: calc(16px * var(--ui-scale));
+    font-size: calc(18px * var(--ui-scale));
   }
 
+  /* ===== Верхняя панель ===== */
   #topbar {
     position: fixed; top: 0; left: 0; right: 0;
     padding: var(--topbar-padding);
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 14px;
     background: rgba(30,30,40,0.92);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     z-index: 50;
     flex-wrap: nowrap;
@@ -234,14 +275,14 @@
   }
   #topbar .title {
     font-size: var(--title-font);
-    font-weight: 600;
+    font-weight: 700;
     color: #eee;
     flex-shrink: 0;
   }
   #search-input {
-    flex: 1; min-width: 60px;
+    flex: 1; min-width: 100px;
     padding: var(--btn-padding);
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid #3a3a45;
     background: rgba(26,26,34,0.9);
     color: #eee;
@@ -252,110 +293,120 @@
   #search-input::placeholder { color: #666; }
   #topbar button {
     padding: var(--btn-padding);
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
     background: #7a5ba0;
     color: white;
     font-size: var(--btn-font);
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     flex-shrink: 0;
   }
   #topbar .logout-btn {
-    background: none; color: #888; font-size: calc(12px * var(--ui-scale));
-    text-decoration: underline; padding: 6px;
+    background: none; color: #888;
+    font-size: calc(13px * var(--ui-scale));
+    text-decoration: underline;
+    padding: 8px;
+    font-weight: 500;
   }
 
+  /* ===== Нижняя панель ===== */
   #bottombar {
     position: fixed;
-    bottom: calc(20px * var(--ui-scale));
+    bottom: calc(28px * var(--ui-scale));
     left: 50%;
     transform: translateX(-50%);
-    display: flex; gap: 8px;
+    display: flex; gap: 10px;
     z-index: 50;
   }
   #bottombar button {
-    padding: calc(14px * var(--ui-scale)) calc(24px * var(--ui-scale));
-    border-radius: 30px;
+    padding: calc(16px * var(--ui-scale)) calc(28px * var(--ui-scale));
+    border-radius: 40px;
     border: none;
     background: #7a5ba0;
     color: white;
-    font-size: calc(15px * var(--ui-scale));
-    font-weight: 600;
+    font-size: calc(17px * var(--ui-scale));
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 18px rgba(122,91,160,0.5);
+    box-shadow: 0 6px 22px rgba(122,91,160,0.6);
   }
 
+  /* ===== Модалки ===== */
   .modal-bg {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.65);
     display: flex; align-items: center; justify-content: center;
     padding: 20px; z-index: 200;
   }
   .modal {
-    background: #252530; color: #eee; border-radius: 18px;
+    background: #252530; color: #eee; border-radius: 22px;
     padding: var(--modal-padding);
     width: 100%; max-width: var(--modal-max-w);
-    max-height: 88vh; overflow-y: auto;
+    max-height: 90vh; overflow-y: auto;
   }
-  .modal h2 { font-size: var(--modal-h2); margin: 0 0 16px; color: #fff; }
-  .modal label { font-size: var(--modal-label); color: #aaa; display: block; margin-top: 12px; margin-bottom: 6px; }
+  .modal h2 { font-size: var(--modal-h2); margin: 0 0 20px; color: #fff; font-weight: 700; }
+  .modal label { font-size: var(--modal-label); color: #aaa; display: block; margin-top: 16px; margin-bottom: 8px; font-weight: 500; }
   .modal input, .modal textarea, .modal select {
-    width: 100%; padding: calc(10px * var(--ui-scale)); border-radius: 10px;
+    width: 100%; padding: calc(12px * var(--ui-scale)); border-radius: 12px;
     border: 1px solid #3a3a45; font-size: var(--modal-input); font-family: inherit;
     background: #1a1a22; color: #eee;
   }
   .modal input:focus, .modal textarea:focus { outline: none; border-color: #a78bca; }
-  .modal textarea { resize: vertical; min-height: 60px; }
-  .modal-row { display: flex; gap: 8px; }
+  .modal textarea { resize: vertical; min-height: 80px; }
+  .modal-row { display: flex; gap: 10px; }
   .modal-row > * { flex: 1; }
-  .colors { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .colors { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
   .color-swatch {
-    width: calc(32px * var(--ui-scale));
-    height: calc(32px * var(--ui-scale));
+    width: calc(40px * var(--ui-scale));
+    height: calc(40px * var(--ui-scale));
     border-radius: 50%;
     cursor: pointer;
-    border: 3px solid transparent;
+    border: 4px solid transparent;
   }
   .color-swatch.active { border-color: #b18bdb; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
   .modal-actions button {
-    flex: 1; padding: var(--modal-btn-padding); border-radius: 10px; border: none;
-    font-size: var(--modal-btn-font); font-weight: 600; cursor: pointer;
+    flex: 1; padding: var(--modal-btn-padding); border-radius: 12px; border: none;
+    font-size: var(--modal-btn-font); font-weight: 700; cursor: pointer;
   }
   .modal-actions .save { background: #7a5ba0; color: white; }
   .modal-actions .cancel { background: #3a3a45; color: #ddd; }
   .modal-actions .delete { background: #5a3030; color: #f99; }
   .hidden { display: none !important; }
 
+  /* ===== Подсказка ===== */
   #hint {
-    position: fixed; top: calc(60px * var(--ui-scale)); left: 50%; transform: translateX(-50%);
+    position: fixed;
+    top: calc(80px * var(--ui-scale));
+    left: 50%; transform: translateX(-50%);
     background: rgba(255,255,255,0.15); color: white;
-    padding: 10px 16px; border-radius: 20px;
-    font-size: calc(13px * var(--ui-scale));
+    padding: 14px 24px; border-radius: 24px;
+    font-size: var(--hint-font);
     z-index: 60; transition: opacity 0.5s; pointer-events: none;
     max-width: 90%; text-align: center;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
   }
 
+  /* ===== Напоминание ===== */
   #reminder {
     position: fixed;
-    bottom: calc(80px * var(--ui-scale));
+    bottom: calc(100px * var(--ui-scale));
     left: 50%; transform: translateX(-50%);
     background: #252530; color: #eee;
-    padding: calc(14px * var(--ui-scale)) calc(18px * var(--ui-scale));
-    border-radius: 16px;
-    box-shadow: 0 6px 30px rgba(0,0,0,0.6);
-    max-width: 90%; width: calc(400px * var(--ui-scale));
+    padding: calc(18px * var(--ui-scale)) calc(22px * var(--ui-scale));
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    max-width: 90%; width: calc(460px * var(--ui-scale));
     z-index: 70;
-    display: flex; gap: 12px; align-items: center;
+    display: flex; gap: 16px; align-items: center;
+    border: 1px solid rgba(255,255,255,0.08);
   }
-  #reminder .rem-icon { font-size: calc(24px * var(--ui-scale)); flex-shrink: 0; }
-  #reminder .rem-text { flex: 1; font-size: calc(14px * var(--ui-scale)); }
-  #reminder .rem-text b { display: block; font-size: calc(12px * var(--ui-scale)); color: #888; margin-bottom: 2px; }
+  #reminder .rem-icon { font-size: var(--rem-icon); flex-shrink: 0; }
+  #reminder .rem-text { flex: 1; font-size: var(--rem-font); }
+  #reminder .rem-text b { display: block; font-size: calc(13px * var(--ui-scale)); color: #888; margin-bottom: 4px; font-weight: 500; }
   #reminder .rem-close {
-    background: none; border: none; font-size: calc(18px * var(--ui-scale));
-    color: #999; cursor: pointer; padding: 4px; flex-shrink: 0;
+    background: none; border: none; font-size: calc(20px * var(--ui-scale));
+    color: #999; cursor: pointer; padding: 6px; flex-shrink: 0;
   }
 </style>
 </head>
@@ -390,7 +441,7 @@
     <button onclick="openNewWish()">＋ Добавить желание</button>
   </div>
 
-  <div id="hint" class="hidden">Тащи карточки · Тапни — редактировать</div>
+  <div id="hint" class="hidden">Тащи карточки · Тапни — редактировать · Двойной клик по пустому — сброс вида</div>
 
 <!-- ===== ЧАСТЬ 2 ПРИДЁТ СЛЕДУЮЩИМ СООБЩЕНИЕМ ===== -->
 
@@ -407,14 +458,14 @@
 
   let cam = { x: 0, y: 0, scale: 1 };
 
-  const WORLD_SIZE = 8000;
+  const WORLD_SIZE = 12000;
   const WORLD_CENTER = WORLD_SIZE / 2;
 
-  // Зоны: 3 большие области
+  // Зоны: три большие области
   const ZONES = [
-    { id: 'dreams', label: '💭 Мечты',    x: 300,  y: 300, w: 2200, h: 4000, color: 'rgba(255, 120, 120, 0.06)' },
-    { id: 'soon',   label: '⭐ Скоро',    x: 2900, y: 300, w: 2200, h: 4000, color: 'rgba(120, 180, 255, 0.06)' },
-    { id: 'done',   label: '✅ Сбылось', x: 5500, y: 300, w: 2200, h: 4000, color: 'rgba(120, 255, 160, 0.06)' }
+    { id: 'dreams', label: '💭 Мечты',    x: 500,  y: 500, w: 3200, h: 6000, color: 'rgba(255, 120, 120, 0.06)' },
+    { id: 'soon',   label: '⭐ Скоро',    x: 4400, y: 500, w: 3200, h: 6000, color: 'rgba(120, 180, 255, 0.06)' },
+    { id: 'done',   label: '✅ Сбылось', x: 8300, y: 500, w: 3200, h: 6000, color: 'rgba(120, 255, 160, 0.06)' }
   ];
 
   const COLORS = [
@@ -422,11 +473,11 @@
     '#ffe8cc', '#e8d6ff', '#ffe0f0', '#e0e0e0'
   ];
 
-  // Определяем, ПК это или телефон, чтобы задать размеры новых карточек
   function getDefaultCardSize() {
     const w = window.innerWidth;
-    if (w >= 1400) return { w: 360, h: 300 };
-    if (w >= 768) return { w: 300, h: 250 };
+    if (w >= 2200) return { w: 440, h: 360 };
+    if (w >= 1400) return { w: 380, h: 300 };
+    if (w >= 768)  return { w: 320, h: 260 };
     return { w: 240, h: 200 };
   }
 
@@ -477,18 +528,38 @@
     document.getElementById('board').classList.remove('hidden');
     document.getElementById('bottombar').classList.remove('hidden');
 
-    cam.x = window.innerWidth / 2 - WORLD_CENTER;
-    cam.y = window.innerHeight / 2 - WORLD_CENTER;
-    cam.scale = 1;
-    applyCamera();
-
     renderZones();
     loadWishes();
 
     const hint = document.getElementById('hint');
     hint.classList.remove('hidden');
-    setTimeout(() => { hint.style.opacity = '0'; }, 4000);
-    setTimeout(() => { hint.classList.add('hidden'); }, 4500);
+    setTimeout(() => { hint.style.opacity = '0'; }, 5000);
+    setTimeout(() => { hint.classList.add('hidden'); }, 5500);
+  }
+
+  // Подгоняем вид так, чтобы три зоны были видны
+  function fitView() {
+    const minX = 200;
+    const minY = 300;
+    const maxX = 11700;
+    const maxY = 6700;
+    const zoneW = maxX - minX;
+    const zoneH = maxY - minY;
+
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+
+    const scaleX = screenW / zoneW;
+    const scaleY = screenH / zoneH;
+    const scale = Math.min(scaleX, scaleY) * 0.95;
+    cam.scale = Math.max(0.2, Math.min(1.5, scale));
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    cam.x = screenW / 2 - centerX * cam.scale;
+    cam.y = screenH / 2 - centerY * cam.scale;
+    applyCamera();
   }
 
   function renderZones() {
@@ -519,6 +590,7 @@
     }
     wishes = data || [];
     renderAll();
+    fitView();
     maybeShowReminder();
   }
 
@@ -698,8 +770,8 @@
       const p = point(e);
       const dx = (p.x - startX) / cam.scale;
       const dy = (p.y - startY) / cam.scale;
-      w.width = Math.max(140, Math.round(origW + dx));
-      w.height = Math.max(100, Math.round(origH + dy));
+      w.width = Math.max(180, Math.round(origW + dx));
+      w.height = Math.max(120, Math.round(origH + dy));
       el.style.width = w.width + 'px';
       el.style.height = w.height + 'px';
     };
@@ -746,6 +818,12 @@
     document.removeEventListener('pointerup', onPanUp);
   }
 
+  // Двойной клик по пустому месту — сброс вида
+  board.addEventListener('dblclick', (e) => {
+    if (e.target.closest('.wish')) return;
+    fitView();
+  });
+
   function applyCamera() {
     world.style.transform = 'translate(' + cam.x + 'px, ' + cam.y + 'px) scale(' + cam.scale + ')';
   }
@@ -762,7 +840,7 @@
   board.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchStartDist > 0) {
       const d = dist(e.touches[0], e.touches[1]);
-      const newScale = Math.min(2.5, Math.max(0.3, pinchStartScale * (d / pinchStartDist)));
+      const newScale = Math.min(2.5, Math.max(0.15, pinchStartScale * (d / pinchStartDist)));
       cam.scale = newScale;
       applyCamera();
     }
@@ -773,7 +851,7 @@
   board.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = -e.deltaY * 0.001;
-    cam.scale = Math.min(2.5, Math.max(0.3, cam.scale * (1 + delta)));
+    cam.scale = Math.min(2.5, Math.max(0.15, cam.scale * (1 + delta)));
     applyCamera();
   }, { passive: false });
 
@@ -930,7 +1008,7 @@
           '<button class="cancel" onclick="closeModal()">Отмена</button>' +
           '<button class="save" onclick="saveEdit()">Сохранить</button>' +
         '</div>' +
-        '<div class="modal-actions" style="margin-top:8px;">' +
+        '<div class="modal-actions" style="margin-top:10px;">' +
           '<button class="cancel" onclick="toggleDone()" style="background:#2a4a2a;color:#8f8;">' +
             (w.done ? '↩ Вернуть в работу' : '✅ Отметить сбывшимся') +
           '</button>' +
@@ -1062,6 +1140,15 @@
       if (r) r.remove();
     }, 15000);
   }
+
+  // Горячая клавиша: "F" — сброс вида (если не в модалке)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
+      if (document.getElementById('modal')) return;
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      fitView();
+    }
+  });
 
   document.getElementById('password').addEventListener('keypress', e => {
     if (e.key === 'Enter') login();
