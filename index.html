@@ -15,8 +15,6 @@
     background: #f5efe7;
     touch-action: none;
   }
-
-  /* ===== Экран входа ===== */
   #auth-screen {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
@@ -47,7 +45,6 @@
   .auth-box button:disabled { opacity: 0.5; }
   .auth-msg { font-size: 13px; color: #c66; text-align: center; margin-top: 12px; min-height: 18px; }
 
-  /* ===== Доска ===== */
   #board {
     position: fixed; inset: 0;
     overflow: hidden;
@@ -59,17 +56,12 @@
     cursor: grab;
   }
   #board:active { cursor: grabbing; }
-
-  /* Слой, который двигается (мир) */
   #world {
     position: absolute;
     top: 0; left: 0;
     width: 5000px; height: 5000px;
     transform-origin: 0 0;
-    /* стартуем с центром мира в центре экрана */
   }
-
-  /* Карточка */
   .wish {
     position: absolute;
     border-radius: 14px;
@@ -86,7 +78,6 @@
   .wish.dragging { box-shadow: 0 10px 24px rgba(0,0,0,0.25); z-index: 9999; }
   .wish.done { opacity: 0.45; }
   .wish.done .wish-text { text-decoration: line-through; }
-
   .wish-img {
     width: 100%; flex: 1;
     object-fit: cover;
@@ -125,8 +116,6 @@
     color: rgba(0,0,0,0.25);
     font-size: 14px;
   }
-
-  /* ===== Верхняя панель ===== */
   #topbar {
     position: fixed; top: 0; left: 0; right: 0;
     padding: 10px 12px;
@@ -155,8 +144,6 @@
     background: none; color: #999; font-size: 13px;
     text-decoration: underline; padding: 6px;
   }
-
-  /* ===== Нижняя панель ===== */
   #bottombar {
     position: fixed; bottom: 20px; left: 50%;
     transform: translateX(-50%);
@@ -174,8 +161,6 @@
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(139,107,177,0.4);
   }
-
-  /* ===== Модалки ===== */
   .modal-bg {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.4);
@@ -210,10 +195,7 @@
   .modal-actions .save { background: #8b6bb1; color: white; }
   .modal-actions .cancel { background: #eee; color: #555; }
   .modal-actions .delete { background: #f5d5d5; color: #a33; }
-
   .hidden { display: none !important; }
-
-  /* Стартовое уведомление */
   #hint {
     position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,0.75); color: white;
@@ -224,7 +206,6 @@
 </head>
 <body>
 
-  <!-- ===== ВХОД ===== -->
   <div id="auth-screen">
     <h1>✨ Мои желания</h1>
     <div class="sub">Войди, чтобы открыть свою доску</div>
@@ -237,7 +218,6 @@
     </div>
   </div>
 
-  <!-- ===== ДОСКА ===== -->
   <div id="topbar" class="hidden">
     <div class="title">✨ Мои желания</div>
     <button onclick="openNewWish()">+ Желание</button>
@@ -255,32 +235,26 @@
   <div id="hint" class="hidden">Тащи карточки пальцем · Тапни — редактировать</div>
 
 <script>
-  // ======== КОНФИГ ========
   const SUPABASE_URL = 'https://mdlpxazhddmkjzqvyjpp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_0umpiGCYpJdrK2xru-IrBw_sdzbW3nC';
 
   const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ======== СОСТОЯНИЕ ========
   let currentUser = null;
   let wishes = [];
-  let editingId = null;      // id карточки, которую редактируем
+  let editingId = null;
   let selectedColor = '#fff3b0';
 
-  // Камера (для зума и перемещения доски)
   let cam = { x: 0, y: 0, scale: 1 };
 
-  // Центр мира — от него ставим новые карточки
   const WORLD_SIZE = 5000;
   const WORLD_CENTER = WORLD_SIZE / 2;
 
-  // Цвета для палитры
   const COLORS = [
     '#fff3b0', '#ffd6d6', '#d6e8ff', '#d6ffe0',
     '#ffe8cc', '#e8d6ff', '#ffe0f0', '#e0e0e0'
   ];
 
-  // ======== АВТОРИЗАЦИЯ ========
   async function checkSession() {
     const { data } = await db.auth.getSession();
     if (data.session) {
@@ -320,14 +294,12 @@
     document.getElementById('auth-screen').classList.remove('hidden');
   }
 
-  // ======== СТАРТ ========
   function startApp() {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('topbar').classList.remove('hidden');
     document.getElementById('board').classList.remove('hidden');
     document.getElementById('bottombar').classList.remove('hidden');
 
-    // Начальная позиция камеры — центр мира в центре экрана
     cam.x = window.innerWidth / 2 - WORLD_CENTER;
     cam.y = window.innerHeight / 2 - WORLD_CENTER;
     cam.scale = 1;
@@ -335,14 +307,12 @@
 
     loadWishes();
 
-    // Подсказка
     const hint = document.getElementById('hint');
     hint.classList.remove('hidden');
     setTimeout(() => { hint.style.opacity = '0'; }, 3000);
     setTimeout(() => { hint.classList.add('hidden'); }, 3500);
   }
 
-  // ======== ЗАГРУЗКА И ОТОБРАЖЕНИЕ ========
   async function loadWishes() {
     const { data, error } = await db
       .from('wishes')
@@ -388,14 +358,10 @@
       <div class="wish-handle">◢</div>
     `;
 
-    // Перетаскивание
     attachDrag(el, w);
-
-    // Изменение размера
     const handle = el.querySelector('.wish-handle');
     attachResize(handle, el, w);
 
-    // Тап — открыть редактор (но не при перетаскивании)
     el.addEventListener('click', (e) => {
       if (el.dataset.dragged === '1') {
         el.dataset.dragged = '0';
@@ -407,7 +373,6 @@
     return el;
   }
 
-  // ======== ПЕРЕТАСКИВАНИЕ ========
   function attachDrag(el, w) {
     let startX, startY, origX, origY, dragging = false, moved = false;
 
@@ -445,7 +410,6 @@
 
       if (moved) {
         el.dataset.dragged = '1';
-        // Округляем и сохраняем
         w.pos_x = Math.round(w.pos_x);
         w.pos_y = Math.round(w.pos_y);
         await db.from('wishes').update({
@@ -458,7 +422,6 @@
     el.addEventListener('pointerdown', onDown);
   }
 
-  // ======== ИЗМЕНЕНИЕ РАЗМЕРА ========
   function attachResize(handle, el, w) {
     if (!handle) return;
 
@@ -500,14 +463,12 @@
     handle.addEventListener('pointerdown', onDown);
   }
 
-  // ======== ПЕРЕМЕЩЕНИЕ ДОСКИ (PAN) ========
   const board = document.getElementById('board');
   const world = document.getElementById('world');
 
   let panning = false, panStartX, panStartY, camStartX, camStartY;
 
   board.addEventListener('pointerdown', (e) => {
-    // Если кликнули по карточке — не панорамируем
     if (e.target.closest('.wish')) return;
     panning = true;
     panStartX = e.clientX;
@@ -534,7 +495,6 @@
     world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
   }
 
-  // ======== ЗУМ (pinch на телефоне, колесо на компе) ========
   let pinchStartDist = 0, pinchStartScale = 1;
 
   board.addEventListener('touchstart', (e) => {
@@ -568,7 +528,6 @@
     return Math.sqrt(dx*dx + dy*dy);
   }
 
-  // ======== МОДАЛКА НОВОГО ЖЕЛАНИЯ ========
   function openNewWish() {
     editingId = null;
     selectedColor = '#fff3b0';
@@ -624,7 +583,6 @@
     const importance = +document.getElementById('m-importance').value;
     const image_url = document.getElementById('m-image').value.trim() || null;
 
-    // Ставим карточку в центр текущего вида
     const pos_x = Math.round(-cam.x / cam.scale + window.innerWidth / (2 * cam.scale));
     const pos_y = Math.round(-cam.y / cam.scale + window.innerHeight / (2 * cam.scale));
 
@@ -643,10 +601,126 @@
     closeModal();
   }
 
-  // ======== МОДАЛКА РЕДАКТИРОВАНИЯ ========
   function openEditWish(id) {
     const w = wishes.find(x => x.id === id);
     if (!w) return;
 
     editingId = id;
-    selecte
+    selectedColor = w.color || '#fff3b0';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'modal';
+    modal.innerHTML = `
+      <div class="modal">
+        <h2>Редактировать желание</h2>
+        <label>Текст</label>
+        <textarea id="m-text">${escapeHtml(w.text)}</textarea>
+        <label>Ссылка на картинку</label>
+        <input id="m-image" value="${escapeAttr(w.image_url || '')}" placeholder="https://..." />
+        <label>Важность</label>
+        <select id="m-importance">
+          <option value="1" ${w.importance===1?'selected':''}>🔥 Очень важно</option>
+          <option value="2" ${w.importance===2?'selected':''}>⭐ Важно</option>
+          <option value="3" ${w.importance===3?'selected':''}>💭 Просто хочется</option>
+        </select>
+        <label>Цвет</label>
+        <div class="colors" id="m-colors"></div>
+        <div class="modal-actions">
+          <button class="delete" onclick="deleteWish()">Удалить</button>
+          <button class="cancel" onclick="closeModal()">Отмена</button>
+          <button class="save" onclick="saveEdit()">Сохранить</button>
+        </div>
+        <div class="modal-actions" style="margin-top:8px;">
+          <button class="cancel" onclick="toggleDone()" style="background:#e8f5e0;color:#4a7a2a;">
+            ${w.done ? '↩ Вернуть в работу' : '✅ Отметить сбывшимся'}
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    renderColorPicker();
+  }
+
+  async function saveEdit() {
+    const w = wishes.find(x => x.id === editingId);
+    if (!w) return;
+
+    const text = document.getElementById('m-text').value.trim();
+    if (!text) { alert('Текст не может быть пустым'); return; }
+
+    const importance = +document.getElementById('m-importance').value;
+    const image_url = document.getElementById('m-image').value.trim() || null;
+
+    const { error } = await db.from('wishes').update({
+      text, importance, image_url, color: selectedColor
+    }).eq('id', w.id);
+
+    if (error) { alert('Ошибка: ' + error.message); return; }
+
+    w.text = text;
+    w.importance = importance;
+    w.image_url = image_url;
+    w.color = selectedColor;
+
+    refreshCard(w);
+    closeModal();
+  }
+
+  async function deleteWish() {
+    const w = wishes.find(x => x.id === editingId);
+    if (!w) return;
+    if (!confirm('Удалить это желание?')) return;
+
+    const { error } = await db.from('wishes').delete().eq('id', w.id);
+    if (error) { alert('Ошибка: ' + error.message); return; }
+
+    wishes = wishes.filter(x => x.id !== w.id);
+    const el = document.querySelector(`.wish[data-id="${w.id}"]`);
+    if (el) el.remove();
+    closeModal();
+  }
+
+  async function toggleDone() {
+    const w = wishes.find(x => x.id === editingId);
+    if (!w) return;
+
+    const { error } = await db.from('wishes').update({ done: !w.done }).eq('id', w.id);
+    if (error) { alert('Ошибка: ' + error.message); return; }
+
+    w.done = !w.done;
+    refreshCard(w);
+    closeModal();
+  }
+
+  function refreshCard(w) {
+    const old = document.querySelector(`.wish[data-id="${w.id}"]`);
+    if (!old) return;
+    const fresh = createCard(w);
+    old.replaceWith(fresh);
+  }
+
+  function closeModal() {
+    const m = document.getElementById('modal');
+    if (m) m.remove();
+    editingId = null;
+  }
+
+  function point(e) {
+    return { x: e.clientX, y: e.clientY };
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  document.getElementById('password').addEventListener('keypress', e => {
+    if (e.key === 'Enter') login();
+  });
+
+  checkSession();
+</script>
+</body>
+</html>
